@@ -76,7 +76,7 @@ export const en = {
   },
   contact: {
     eyebrow: '05 — Contact',
-    title: "TESTE CI/CD",
+    title: "TESTE CI/CD 2",
     body: '[Placeholder — an invitation to get in touch.]',
     cta: 'Send an email',
   },

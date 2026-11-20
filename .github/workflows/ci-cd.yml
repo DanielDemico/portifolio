@@ -1,16 +1,23 @@
 name: CI/CD
 
+# Pull request para main: só instala e faz o build (confere se nada quebrou).
+# Push/merge em main: faz o build e publica a pasta dist na VM por SSH.
+# Na VM, a chave de deploy só pode rodar ~/portfolio-publicar.sh (deploy/publicar.sh),
+# que troca o site no container nginx em 127.0.0.1:8080. O túnel da Cloudflare
+# que já roda na VM (criador-tunel) leva danielcezar.com.br até lá.
+
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: production
+  group: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.ref) || 'production' }}
   cancel-in-progress: false
 
 jobs:
@@ -33,16 +40,50 @@ jobs:
       - name: Build site
         run: npm run build
 
-  deploy:
-    name: Deploy to Docker host
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: build
-    runs-on: [self-hosted, docker]
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
+      - name: Keep build for deploy
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
 
-      - name: Build and restart services
+  deploy:
+    name: Deploy to VM
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://danielcezar.com.br
+    steps:
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+      - name: Set up SSH
         env:
-          CLOUDFLARE_TUNNEL_TOKEN: ${{ secrets.CLOUDFLARE_TUNNEL_TOKEN }}
-        run: docker compose up --detach --build --remove-orphans
+          VM_SSH_KEY: ${{ secrets.VM_SSH_KEY }}
+          VM_KNOWN_HOSTS: ${{ secrets.VM_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VM_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          printf '%s\n' "$VM_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Publish to VM
+        env:
+          VM_HOST: ${{ secrets.VM_HOST }}
+        run: |
+          tar -C dist -czf - . | ssh -T -o BatchMode=yes -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes -i ~/.ssh/deploy_key "ubuntu@$VM_HOST"
+
+      - name: Check public site
+        run: |
+          for i in 1 2 3 4 5; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' https://danielcezar.com.br/) && [ "$code" = 200 ] && exit 0
+            echo "Tentativa $i: HTTP $code"; sleep 5
+          done
+          exit 1

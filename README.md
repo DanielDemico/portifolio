@@ -1,27 +1,51 @@
 # Portfólio
 
-## Docker e Cloudflare Tunnel
+## Deploy (GitHub Actions → VM → Cloudflare Tunnel)
 
-O `docker-compose.yml` serve o site em `127.0.0.1:8080` (só na própria máquina)
-e roda o `cloudflared` na rede do host, igual ao container `criador-tunel` da VM.
-Nenhuma porta fica aberta para fora.
+O site fica na VM Oracle num container `nginx:alpine` que escuta só em
+`127.0.0.1:8080`. Nenhuma porta fica aberta para fora: o container
+`criador-tunel` (cloudflared, já existente na VM) leva `danielcezar.com.br`
+até essa porta. A rota do túnel é `danielcezar.com.br → http://localhost:8080`.
 
-1. O token é o mesmo do tunnel da VM Oracle (`~/criador-bot/servidor/painel/tunel.env`).
-   Para rodar manualmente, ele fica em `.env` nesta pasta (fora do git e da imagem).
-2. No repositório GitHub, adicione em **Settings → Secrets and variables →
-   Actions → New repository secret** o segredo `CLOUDFLARE_TUNNEL_TOKEN`.
-3. Na configuração do tunnel, troque a origem da rota pública
-   `danielcezar.com.br` de `http://traefik:80` para **`http://localhost:8080`**.
-   A rota `videomaker` (`http://localhost:8787`) continua igual.
-4. Configure um runner GitHub Actions **self-hosted** na máquina que executará
-   o Docker e atribua a ele os labels `self-hosted` e `docker`. O runner precisa
-   ter Docker Engine/Desktop e o plugin `docker compose`, com permissão para
-   iniciar containers. Não exponha esse runner a workflows de pull requests
-   não confiáveis.
+O fluxo em [.github/workflows/ci-cd.yml](.github/workflows/ci-cd.yml):
 
-Pull requests para `main` executam a instalação e o build. Após um push/merge
-em `main`, o job de deploy no runner reconstrói o site e atualiza o tunnel.
+1. **Pull request para `main`:** instala e faz o build, só para conferir.
+2. **Push/merge em `main`** (ou "Run workflow" manual): faz o build, envia a
+   pasta `dist` compactada por SSH para a VM e confere se o site responde.
+3. **Na VM**, a chave de deploy só consegue rodar `~/portfolio-publicar.sh`
+   (cópia de [deploy/publicar.sh](deploy/publicar.sh)). O script descompacta o
+   site em `~/portfolio-site/releases/<data>`, recria o container apontando
+   para essa pasta e, se o site novo não responder, volta para o anterior.
+   As 3 versões mais recentes ficam guardadas.
 
-Para executar manualmente, defina `CLOUDFLARE_TUNNEL_TOKEN` no ambiente e rode
-`docker compose up --detach --build`. Não grave o token no repositório, no
-Dockerfile ou em uma imagem.
+### Segredos do repositório
+
+Em **Settings → Secrets and variables → Actions**:
+
+| Segredo | Conteúdo |
+|---|---|
+| `VM_HOST` | IP da VM |
+| `VM_SSH_KEY` | chave privada de deploy (só serve para publicar o site) |
+| `VM_KNOWN_HOSTS` | linha `ssh-keyscan -t ed25519 <IP>` da VM, para o GitHub confirmar que fala com ela |
+
+A chave pública está em `~/.ssh/authorized_keys` da VM com
+`command="/home/ubuntu/portfolio-publicar.sh",restrict`: não abre shell, não
+faz túnel e só executa o script.
+
+### Mudou o `deploy/publicar.sh`?
+
+O script da VM não é atualizado pelo deploy (a chave de deploy não pode se
+alterar). Depois de mudar o arquivo, copie para a VM com a chave de
+administrador:
+
+```bash
+sed 's/\r$//' deploy/publicar.sh | ssh -i <chave> ubuntu@<ip da VM> 'install -m 755 /dev/stdin ~/portfolio-publicar.sh'
+```
+
+### Rodar localmente com Docker
+
+O `Dockerfile` continua servindo para testar o build de produção no PC:
+
+```bash
+docker build -t portfolio . && docker run --rm -p 8080:80 portfolio
+```
