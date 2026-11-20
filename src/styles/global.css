@@ -1,0 +1,269 @@
+@import 'tailwindcss';
+
+/* Dark mode controlado pelo atributo data-theme no <html> (não pelo sistema). */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* =========================================================================
+   DESIGN TOKENS — paleta da marca (artefato CsrxGifP58wyKqncAqVeha)
+   Nunca use hex direto nos componentes: use as classes bg-*, text-*, etc.
+   ========================================================================= */
+:root {
+  /* Paleta oficial da marca (fixa, igual nos dois temas) */
+  --brand-purple: #6d28d9; /* Roxo principal */
+  --brand-purple-light: #8b5cf6; /* Roxo claro */
+  --brand-purple-deep: #2e1065; /* Roxo profundo */
+  --brand-ink: #0f0b1a; /* Tinta */
+  --brand-offwhite: #f7f5fb; /* Off-white */
+  --brand-accent: #c6f432; /* Destaque (lima) */
+
+  /* Tema CLARO (padrão) */
+  --bg: #f7f5fb;
+  --bg-elevated: #ffffff;
+  --surface: #efeafa;
+  --border: #e6e0f5;
+  --text: #0f0b1a;
+  --text-muted: #564a78;
+  --text-subtle: #6f659a;
+  --primary: #6d28d9;
+  --primary-strong: #2e1065;
+  --primary-contrast: #ffffff;
+  --accent: #c6f432;
+  --accent-contrast: #0f0b1a;
+  --logo-from: #2e1065;
+  --logo-to: #6d28d9;
+  --logo-rings: #6d28d9;
+  --glow: rgb(109 40 217 / 0.18);
+  --vignette: rgb(46 16 101 / 0.1);
+  --grain-opacity: 0.05;
+
+  /* Hero no tema claro: "lua de dia". Céu lilás pálido, cristas em perspectiva atmosférica
+     (quanto mais longe, mais clara e mais próxima da cor do céu) e base fundindo com --bg. */
+  --hero-sky: linear-gradient(180deg, #f7f5fb 0%, #f1ecfb 48%, #e6def9 100%);
+  --hero-haze: rgb(139 92 246 / 0.14);
+  --rock-far-top: #ddd3f7;
+  --rock-far-mid: #e9e2fa;
+  --rock-far-base: #efeafa;
+  --rock-near-top: #c4b5fd;
+  --rock-near-mid: #dcd3f8;
+  --rock-near-base: #f7f5fb;
+  --rock-shine: #ffffff;
+  --rock-rim: #6d28d9;
+  --rock-rim-end: #6d28d9;
+  --hero-title-glow: 0 0 32px rgb(109 40 217 / 0.16);
+  --particle: #8b5cf6;
+  --particle-glow: rgb(139 92 246 / 0.3);
+
+  color-scheme: light;
+}
+
+/* Também vale para seções forçadas ao escuro (ex.: <section data-theme="dark">) */
+[data-theme='dark'] {
+  --bg: #0f0b1a;
+  --bg-elevated: #171127;
+  --surface: #1e1733;
+  --border: #2a2145;
+  --text: #f7f5fb;
+  --text-muted: #b9aedc;
+  --text-subtle: #8f84b8;
+  --primary: #8b5cf6;
+  --primary-strong: #c4b5fd;
+  --primary-contrast: #0f0b1a;
+  --accent: #c6f432;
+  --accent-contrast: #0f0b1a;
+  --logo-from: #6d28d9;
+  --logo-to: #8b5cf6;
+  --logo-rings: #f7f5fb;
+  --glow: rgb(139 92 246 / 0.28);
+  --vignette: rgb(5 3 10 / 0.75);
+  --grain-opacity: 0.07;
+
+  /* Hero no tema escuro: lua à contraluz, rocha escura com contorno lilás. */
+  --hero-sky: linear-gradient(180deg, #0f0b1a 0%, #0f0b1a 55%, #170f2b 100%);
+  --hero-haze: rgb(109 40 217 / 0.16);
+  --rock-far-top: #19132c;
+  --rock-far-mid: #140f24;
+  --rock-far-base: #120d21;
+  --rock-near-top: #1f1933;
+  --rock-near-mid: #151025;
+  --rock-near-base: #0f0b1a;
+  --rock-shine: #c4b5fd;
+  --rock-rim: #c4b5fd;
+  --rock-rim-end: #8b5cf6;
+  --hero-title-glow: 0 0 28px rgb(139 92 246 / 0.32), 0 0 1px rgb(247 245 251 / 0.3);
+  --particle: #c4b5fd;
+  --particle-glow: rgb(139 92 246 / 0.8);
+
+  color-scheme: dark;
+}
+
+/* Expõe os tokens como utilitários Tailwind: bg-bg, text-muted, border-border... */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-elevated: var(--bg-elevated);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-fg: var(--text);
+  --color-muted: var(--text-muted);
+  --color-subtle: var(--text-subtle);
+  --color-primary: var(--primary);
+  --color-primary-strong: var(--primary-strong);
+  --color-primary-contrast: var(--primary-contrast);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+
+  --color-brand-purple: var(--brand-purple);
+  --color-brand-purple-light: var(--brand-purple-light);
+  --color-brand-purple-deep: var(--brand-purple-deep);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-offwhite: var(--brand-offwhite);
+  --color-brand-accent: var(--brand-accent);
+
+  --font-display: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --animate-twinkle: twinkle 4s ease-in-out infinite;
+  --animate-marquee: marquee 30s linear infinite;
+}
+
+/* ============================== BASE ============================== */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    transition:
+      background-color 0.4s ease,
+      color 0.4s ease;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    line-height: 1.15;
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: var(--brand-accent);
+    color: var(--brand-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  section[id] {
+    scroll-margin-top: 5.5rem;
+  }
+}
+
+/* ============================== UTILITÁRIOS ============================== */
+@utility container-page {
+  width: 100%;
+  max-width: 76rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (min-width: 640px) {
+    padding-inline: 1.5rem;
+  }
+  @media (min-width: 1024px) {
+    padding-inline: 2rem;
+  }
+}
+
+/* Texto com degradê da marca */
+@utility text-gradient {
+  background: linear-gradient(120deg, var(--logo-from), var(--primary) 50%, var(--brand-purple-light));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ============================== HERO CINEMATOGRÁFICO ============================== */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-3%, 2%); }
+  40% { transform: translate(2%, -3%); }
+  60% { transform: translate(-2%, -1%); }
+  80% { transform: translate(3%, 3%); }
+}
+
+@keyframes float-up {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 0.8; }
+  100% { transform: translate(-30px, -160px); opacity: 0; }
+}
+
+.film-vignette {
+  background: radial-gradient(ellipse 110% 85% at 55% 45%, transparent 55%, var(--vignette) 100%);
+}
+
+/* Grão: camada própria na GPU (will-change) e SEM mix-blend-mode, que obrigava a
+   recompor tudo o que está por baixo a cada quadro. Só a opacidade dá o efeito. */
+.film-grain {
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 0.9s steps(5) infinite;
+  will-change: transform;
+}
+
+/* Hero fora da tela (data-paused, ver Hero.tsx): congela os loops decorativos */
+[data-paused] :is(.film-grain, .particle, .animate-twinkle) {
+  animation-play-state: paused;
+}
+
+/* Marquee em CSS puro: roda no compositor, sem JavaScript a cada quadro */
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* Título do hero: brilho roxo suave, estilo "título de filme" (mais discreto no claro) */
+.hero-title {
+  text-shadow: var(--hero-title-glow);
+}
+
+/* Céu do hero + névoa roxa no horizonte, atrás das cristas */
+.hero-sky {
+  background:
+    radial-gradient(ellipse 70% 38% at 50% 100%, var(--hero-haze), transparent 70%),
+    var(--hero-sky);
+}
+
+/* Partículas roxas que sobem perto da borda iluminada da lua */
+.particle {
+  background: var(--particle);
+  box-shadow: 0 0 8px 2px var(--particle-glow);
+  animation: float-up linear infinite;
+}
+
+/* Respeita quem prefere menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
